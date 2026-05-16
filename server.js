@@ -30,8 +30,10 @@ const MODEL_MAPPING = {
   'claude-3-sonnet': 'openai/gpt-oss-20b',
   'gemini-pro': 'qwen/qwen3-next-80b-a3b-thinking',
   'gpt-4.5': 'qwen/qwen3-235b-a22b',
-  'o1': 'z-ai/glm5',
-  'o3-mini': 'z-ai/glm4.7'
+  'o1': 'z-ai/glm-5.1',           // Updated: z-ai/glm5 deprecated 04/20/2026
+  'o3-mini': 'z-ai/glm4.7',
+  'gpt-4.1-mini': 'nvidia/llama-3.3-nemotron-super-49b-v1', // NEW: 49B reasoning model
+  'o3': 'mistralai/mistral-large-3-675b-instruct-2512'       // NEW: 675B MoE flagship
 };
 
 // Health check endpoint
@@ -94,22 +96,13 @@ app.post('/v1/chat/completions', async (req, res) => {
       }
     }
     
-    // Per-model config overrides
-    const modelOverrides = {
-      'qwen/qwen3-235b-a22b': {
-        temperature: 0.7,
-        extra_body: { chat_template_kwargs: { thinking: false } }
-      }
-    };
-    const overrides = modelOverrides[nimModel] || {};
-
     // Transform OpenAI request to NIM format
     const nimRequest = {
       model: nimModel,
       messages: messages,
-      temperature: overrides.temperature || temperature || 0.6,
+      temperature: temperature || 0.6,
       max_tokens: max_tokens || 9024,
-      extra_body: overrides.extra_body || (ENABLE_THINKING_MODE ? { chat_template_kwargs: { thinking: true } } : undefined),
+      extra_body: ENABLE_THINKING_MODE ? { chat_template_kwargs: { thinking: true } } : undefined,
       stream: stream || false
     };
     
